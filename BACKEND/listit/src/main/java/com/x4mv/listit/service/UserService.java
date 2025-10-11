@@ -1,0 +1,165 @@
+package com.x4mv.listit.service;
+
+import com.x4mv.listit.dto.UserDTO;
+import com.x4mv.listit.dto.UserResponseDTO;
+import com.x4mv.listit.model.User;
+import com.x4mv.listit.model.TypeRole;
+import com.x4mv.listit.repository.UserRepository;
+import com.x4mv.listit.repository.TypeRoleRepository;
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+@Service
+public class UserService {
+    
+    @Autowired
+    private UserRepository userRepository;
+    
+    @Autowired
+    private TypeRoleRepository typeRoleRepository;
+    
+    @Autowired
+    private ModelMapper modelMapper;
+
+    UserService(){
+       configureMapping(); 
+    }
+
+    private void configureMapping(){
+        // Mapear de UserDTO a User (ignorando campos específicos)
+        modelMapper.emptyTypeMap(UserDTO.class, User.class)
+            .addMappings(mapper -> {
+                mapper.map(UserDTO::getNombre, User::setNombre);
+                mapper.map(UserDTO::getEdad, User::setEdad);
+                mapper.map(UserDTO::getCorreo, User::setCorreo);
+                mapper.map(UserDTO::getContrasena, User::setContrasena);
+                // Ignoramos el mapeo directo de rolId, lo manejaremos manualmente
+                mapper.skip(User::setRol);
+                // Ignoramos el id si es una creación
+                mapper.skip(User::setId);
+            });
+
+        // Mapear de User a UserResponseDTO
+        modelMapper.emptyTypeMap(User.class, UserResponseDTO.class)
+            .addMappings(mapper -> {
+                mapper.map(User::getId, UserResponseDTO::setId);
+                mapper.map(User::getNombre, UserResponseDTO::setNombre);
+                mapper.map(User::getEdad, UserResponseDTO::setEdad);
+                mapper.map(User::getCorreo, UserResponseDTO::setCorreo);
+                // Mapeo manual del rol
+                mapper.map(src -> src.getRol().getId(), UserResponseDTO::setRolId);
+                mapper.map(src -> src.getRol().getNombre(), UserResponseDTO::setRolName);
+            });
+    }
+
+
+    
+    // CREATE
+    public UserResponseDTO createUser(UserDTO userDTO) {
+
+        // verificamos si no existe un usuario con ese mismo correo
+        Optional<User> usuarioExistente = userRepository.findByCorreo(userDTO.getCorreo());
+        if (usuarioExistente.isPresent()) {
+            throw new RuntimeException("El correo ya existe");
+        }
+        
+        TypeRole rolExistente = typeRoleRepository.findById(userDTO.getRolId())
+            .orElseThrow(() -> {
+                throw new RuntimeException("El rol que quieres asignar no existe");
+            });
+        
+        // empezamos a mapear el dto al entity
+        User nuevoUsuario = modelMapper.map(userDTO, User.class);
+        nuevoUsuario.setRol(rolExistente);
+
+        // guardamos en la bd
+        User usuarioGuardado = userRepository.save(nuevoUsuario);
+
+        // mapeamos de entity a response
+        return modelMapper.map(usuarioGuardado, UserResponseDTO.class);
+    }
+    
+    // READ
+    public List<UserResponseDTO> getAllUsers() {
+      
+        // encontramos todos los usuarios 
+        List<User> usuarios = userRepository.findAll();
+
+        // mapeamos a responseDTO 
+        List<UserResponseDTO> usuariosResponse = new ArrayList<>();
+
+        // recorremos los usuarios para mapearlos de entity a response
+        for (User user : usuarios){
+            UserResponseDTO dto = modelMapper.map(user, UserResponseDTO.class);
+            usuariosResponse.add(dto);
+        }
+
+        return usuariosResponse;
+    }
+    
+    public UserResponseDTO getUserById(Integer id) {
+      
+        // verificamos que exista el usuario 
+        User usuarioExistente = userRepository.findById(id)
+            .orElseThrow(() -> {
+                throw new RuntimeException("El usuario no existe");
+            });
+        
+        UserResponseDTO usuarioResponse = modelMapper.map(usuarioExistente, UserResponseDTO.class);
+
+
+        return usuarioResponse;
+    }
+    
+    
+    // UPDATE
+    public UserResponseDTO updateUser(Integer id, UserDTO userDTO) {
+
+        // verificamos que exista el usuario 
+        User usuarioExistente = userRepository.findById(id)
+            .orElseThrow(()->{
+                throw new RuntimeException("El usuario no existe");
+            });
+
+        TypeRole rolExistente = typeRoleRepository.findById(userDTO.getRolId())
+            .orElseThrow(() -> {
+                throw new RuntimeException("El rol que quieres asignar no existe");
+            });
+
+        // mapeamos el dto a entity 
+        User usuarioActualizado = modelMapper.map(userDTO, User.class);
+        usuarioActualizado.setId(id); // Mantenemos el ID del usuario existente
+        usuarioActualizado.setRol(rolExistente);
+
+        // guardamos en la db 
+        User usuarioGuardado = userRepository.save(usuarioActualizado);
+
+        // mapeamos el entity a response 
+        UserResponseDTO dto = modelMapper.map(usuarioGuardado, UserResponseDTO.class); 
+
+        return dto;
+    }
+    
+    // DELETE
+    public void deleteUser(Integer id) {
+
+        //verificamos que exista el usuario 
+
+        User usuarioExistente = userRepository.findById(id).orElseThrow(() ->{
+            throw new RuntimeException("El usuario no existe");
+        });
+
+
+        userRepository.delete(usuarioExistente);
+
+
+      
+    }
+    
+   
+}
