@@ -1,6 +1,8 @@
 package com.x4mv.listit.service;
 
+import com.x4mv.listit.dto.UserResponseDTO;
 import com.x4mv.listit.dto.UserRoomDTO;
+import com.x4mv.listit.dto.UserRoomResponseDTO;
 import com.x4mv.listit.model.UserRoom;
 import com.x4mv.listit.model.User;
 import com.x4mv.listit.model.Room;
@@ -29,101 +31,75 @@ public class UserRoomService {
     
     @Autowired
     private ModelMapper modelMapper;
-    
+
+
     // CREATE
-    public UserRoomDTO createUserRoom(UserRoomDTO userRoomDTO) {
+    public UserRoomResponseDTO createUserRoom(UserRoomDTO userRoomDTO) {
         // Verify user and room exist
         Optional<User> user = userRepository.findById(userRoomDTO.getUserId());
         Optional<Room> room = roomRepository.findById(userRoomDTO.getRoomId());
         
         if (user.isPresent() && room.isPresent()) {
+            // creamos el entity
             UserRoom userRoom = new UserRoom();
+
+            // seteamos el id
             UserRoom.UserRoomId id = new UserRoom.UserRoomId(userRoomDTO.getUserId(), userRoomDTO.getRoomId());
             userRoom.setId(id);
+            
+            // seteamos los campos del entity
             userRoom.setUser(user.get());
             userRoom.setRoom(room.get());
-            userRoom.setRole(userRoomDTO.getRole());
-            userRoom.setIsActive(userRoomDTO.getIsActive());
             
             UserRoom savedUserRoom = userRoomRepository.save(userRoom);
-            return convertToDTO(savedUserRoom);
+            return convertToResponse(savedUserRoom);
         }
         
         throw new RuntimeException("User or Room not found");
     }
     
     // READ
-    public List<UserRoomDTO> getAllUserRooms() {
+    public List<UserRoomResponseDTO> getAllUserRooms() {
         return userRoomRepository.findAll().stream()
-                .map(this::convertToDTO)
+                .map(this::convertToResponse)
                 .collect(Collectors.toList());
     }
     
-    public Optional<UserRoomDTO> getUserRoomById(Long userId, Long roomId) {
+    public Optional<UserRoomResponseDTO> getUserRoomById(Integer userId, Integer roomId) {
         UserRoom.UserRoomId id = new UserRoom.UserRoomId(userId, roomId);
         return userRoomRepository.findById(id)
-                .map(this::convertToDTO);
+                .map(this::convertToResponse);
     }
     
-    public List<UserRoomDTO> getUserRoomsByUserId(Long userId) {
+    public List<UserRoomResponseDTO> getUserRoomsByUserId(Integer userId) {
         return userRoomRepository.findByUserId(userId).stream()
-                .map(this::convertToDTO)
+                .map(this::convertToResponse)
                 .collect(Collectors.toList());
     }
     
-    public List<UserRoomDTO> getUserRoomsByRoomId(Long roomId) {
+    public List<UserRoomResponseDTO> getUserRoomsByRoomId(Integer roomId) {
         return userRoomRepository.findByRoomId(roomId).stream()
-                .map(this::convertToDTO)
+                .map(this::convertToResponse)
                 .collect(Collectors.toList());
     }
     
-    public Optional<UserRoomDTO> getUserRoomByUserIdAndRoomId(Long userId, Long roomId) {
+    public Optional<UserRoomResponseDTO> getUserRoomByUserIdAndRoomId(Integer userId, Integer roomId) {
         return userRoomRepository.findByUserIdAndRoomId(userId, roomId)
-                .map(this::convertToDTO);
+                .map(this::convertToResponse);
     }
-    
-    public List<UserRoomDTO> getActiveUserRoomsByUserId(Long userId) {
-        return userRoomRepository.findByUserIdAndIsActive(userId, true).stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-    }
-    
-    public List<UserRoomDTO> getActiveUserRoomsByRoomId(Long roomId) {
-        return userRoomRepository.findByRoomIdAndIsActive(roomId, true).stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-    }
-    
-    public List<UserRoomDTO> getUserRoomsByRole(UserRoom.UserRole role) {
-        return userRoomRepository.findByRole(role).stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-    }
-    
-    public List<UserRoomDTO> getUserRoomsByUserIdAndRole(Long userId, UserRoom.UserRole role) {
-        return userRoomRepository.findByUserIdAndRole(userId, role).stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-    }
-    
-    public Long countActiveUsersByRoomId(Long roomId) {
-        return userRoomRepository.countActiveUsersByRoomId(roomId);
-    }
-    
+          
     // UPDATE
-    public Optional<UserRoomDTO> updateUserRoom(Long userId, Long roomId, UserRoomDTO userRoomDTO) {
+    public Optional<UserRoomResponseDTO> updateUserRoom(Integer userId, Integer roomId, UserRoomDTO userRoomDTO) {
         UserRoom.UserRoomId id = new UserRoom.UserRoomId(userId, roomId);
         return userRoomRepository.findById(id)
                 .map(existingUserRoom -> {
-                    existingUserRoom.setRole(userRoomDTO.getRole());
-                    existingUserRoom.setIsActive(userRoomDTO.getIsActive());
                     UserRoom updatedUserRoom = userRoomRepository.save(existingUserRoom);
-                    return convertToDTO(updatedUserRoom);
+                    return convertToResponse(updatedUserRoom);
                 });
     }
     
     // DELETE
-    public boolean deleteUserRoom(Long userId, Long roomId) {
+    public boolean deleteUserRoom(Integer userId, Integer roomId) {
         UserRoom.UserRoomId id = new UserRoom.UserRoomId(userId, roomId);
         if (userRoomRepository.existsById(id)) {
             userRoomRepository.deleteById(id);
@@ -132,23 +108,18 @@ public class UserRoomService {
         return false;
     }
     
-    // UTILITY METHODS
-    private UserRoomDTO convertToDTO(UserRoom userRoom) {
-        UserRoomDTO dto = new UserRoomDTO();
+    // Convertir de entity a UserRoomResponseDTO 
+    private UserRoomResponseDTO convertToResponse(UserRoom userRoom) {
+        UserRoomResponseDTO dto = new UserRoomResponseDTO();
+        dto.setUserName(userRoom.getUser().getNombre());
         dto.setUserId(userRoom.getId().getUserId());
         dto.setRoomId(userRoom.getId().getRoomId());
-        dto.setRole(userRoom.getRole());
-        dto.setJoinedAt(userRoom.getJoinedAt());
-        dto.setIsActive(userRoom.getIsActive());
-        
-        if (userRoom.getUser() != null) {
-            dto.setUsername(userRoom.getUser().getUsername());
-        }
-        
-        if (userRoom.getRoom() != null) {
-            dto.setRoomName(userRoom.getRoom().getName());
-        }
-        
+        dto.setRolId(userRoom.getRol().getId());;
+        dto.setRolName(userRoom.getRol().getNombre());
+        dto.setRoomName(userRoom.getRoom().getNombre());
+       
+
         return dto;
     }
+
 }

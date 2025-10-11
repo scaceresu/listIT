@@ -7,6 +7,9 @@ import com.x4mv.listit.model.User;
 import com.x4mv.listit.model.Room;
 import com.x4mv.listit.repository.EventRepository;
 import com.x4mv.listit.repository.UserRepository;
+
+import jakarta.annotation.PostConstruct;
+
 import com.x4mv.listit.repository.RoomRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,11 +33,9 @@ public class EventService {
     @Autowired
     private ModelMapper modelMapper;
 
-    EventService(){
-       configureMapping(); 
-    }
-
+    @PostConstruct
     private void configureMapping(){
+        
         // Mapear de EventDTO a Event (ignorando campos específicos)
         modelMapper.emptyTypeMap(EventDTO.class, Event.class)
             .addMappings(mapper -> {

@@ -1,7 +1,6 @@
 package com.x4mv.listit.repository;
 
 import com.x4mv.listit.model.UserRoom;
-import com.x4mv.listit.model.TypeRole;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,12 +21,6 @@ public interface UserRoomRepository extends JpaRepository<UserRoom, UserRoom.Use
     @Query("SELECT ur FROM UserRoom ur WHERE ur.id.userId = :userId AND ur.id.roomId = :roomId")
     Optional<UserRoom> findByUserIdAndRoomId(@Param("userId") Integer userId, @Param("roomId") Integer roomId);
     
-    @Query("SELECT ur FROM UserRoom ur WHERE ur.rol = :rol")
-    List<UserRoom> findByRol(@Param("rol") TypeRole rol);
-    
-    @Query("SELECT ur FROM UserRoom ur WHERE ur.id.userId = :userId AND ur.rol = :rol")
-    List<UserRoom> findByUserIdAndRol(@Param("userId") Integer userId, @Param("rol") TypeRole rol);
-    
-    @Query("SELECT COUNT(ur) FROM UserRoom ur WHERE ur.id.roomId = :roomId")
+   @Query("SELECT COUNT(ur) FROM UserRoom ur WHERE ur.id.roomId = :roomId")
     Long countUsersByRoomId(@Param("roomId") Integer roomId);
 }
