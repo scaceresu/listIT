@@ -12,7 +12,7 @@ import lombok.Setter;
 import java.io.Serializable;
 
 @Entity
-@Table(name = "usuarios_salas")
+@Table(name = "user_room")
 @Getter
 @Setter
 @Builder

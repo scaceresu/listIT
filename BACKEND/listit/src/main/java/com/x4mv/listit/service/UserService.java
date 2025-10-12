@@ -63,6 +63,7 @@ public class UserService {
         // verificamos si no existe un usuario con ese mismo correo
         Optional<User> usuarioExistente = userRepository.findByCorreo(userDTO.getCorreo());
         if (usuarioExistente.isPresent()) {
+
             throw new RuntimeException("El correo ya existe");
         }
 
@@ -74,6 +75,7 @@ public class UserService {
         // empezamos a mapear el dto al entity
         User nuevoUsuario = modelMapper.map(userDTO, User.class);
         nuevoUsuario.setRol(rolExistente);
+
 
         // guardamos en la bd
         User usuarioGuardado = userRepository.save(nuevoUsuario);

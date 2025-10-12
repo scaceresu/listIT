@@ -13,7 +13,7 @@ import lombok.Setter;
 @Setter
 @Builder
 @Entity
-@Table(name = "tareas")
+@Table(name = "tasks")
 @NoArgsConstructor
 @AllArgsConstructor
 public class Task {

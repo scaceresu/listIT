@@ -3,23 +3,17 @@ package com.x4mv.listit.model;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
 
 @Getter
 @Setter
 @Builder
 @Entity
-@Table(name = "usuarios")
+@Table(name = "users")
 @NoArgsConstructor
 @AllArgsConstructor
 public class User {
@@ -35,7 +29,7 @@ public class User {
     @Column(nullable = false)
     private String contrasena;
     @ManyToOne
-    @JoinColumn(name = "id_rol")
+    @JoinColumn(name = "rol")
     private TypeRole rol;
    
 }
