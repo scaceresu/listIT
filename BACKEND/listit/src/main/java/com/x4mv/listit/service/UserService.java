@@ -1,5 +1,7 @@
 package com.x4mv.listit.service;
 
+import com.x4mv.listit.dto.LoginDTO;
+import com.x4mv.listit.dto.LoginResponseDTO;
 import com.x4mv.listit.dto.UserDTO;
 import com.x4mv.listit.dto.UserResponseDTO;
 import com.x4mv.listit.model.User;
@@ -11,6 +13,7 @@ import jakarta.annotation.PostConstruct;
 import com.x4mv.listit.repository.TypeRoleRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -29,6 +32,10 @@ public class UserService {
     @Autowired
     private ModelMapper modelMapper;
 
+    // Inyectamos la instancia de de bcrypt para hashear la contrasena
+    @Autowired 
+    private PasswordEncoder passwordEncoder;
+
     @PostConstruct
     private void configureMapping() {
         // Mapear de UserDTO a User (ignorando campos específicos)
@@ -37,7 +44,8 @@ public class UserService {
                     mapper.map(UserDTO::getNombre, User::setNombre);
                     mapper.map(UserDTO::getEdad, User::setEdad);
                     mapper.map(UserDTO::getCorreo, User::setCorreo);
-                    mapper.map(UserDTO::getContrasena, User::setContrasena);
+                    // ignoramos la contrasena por que la debemos encriptar
+                    mapper.skip(User::setContrasena);
                     // Ignoramos el mapeo directo de rolId, lo manejaremos manualmente
                     mapper.skip(User::setRol);
                     // Ignoramos el id si es una creación
@@ -55,6 +63,33 @@ public class UserService {
                     mapper.map(src -> src.getRol().getId(), UserResponseDTO::setRolId);
                     mapper.map(src -> src.getRol().getNombre(), UserResponseDTO::setRolName);
                 });
+    }
+
+    // LOGIN USER
+    public LoginResponseDTO loginUser(LoginDTO loginDTO){
+
+        // verificamos que exista un usuario con ese correo y contrasena 
+        User usuario = userRepository.findByCorreo(loginDTO.getCorreo())
+            .orElseThrow(() ->{
+                throw new RuntimeException("El email o el password son incorrectos");
+        });
+
+        // verificamos que los hashes sean iguales 
+        Boolean validPassword = passwordEncoder.matches(loginDTO.getContrasena(), usuario.getContrasena());
+
+        if (validPassword == false ){
+            throw new RuntimeException("El email o el password son incorrectos");
+        }
+
+        // instanciamos el response para devolver al cliente 
+        LoginResponseDTO loginResponse = new LoginResponseDTO();
+        loginResponse.setRolId(usuario.getRol().getId());
+        loginResponse.setRolNombre(usuario.getRol().getNombre());
+
+        return loginResponse;
+
+
+        
     }
 
     // CREATE
@@ -75,6 +110,7 @@ public class UserService {
         // empezamos a mapear el dto al entity
         User nuevoUsuario = modelMapper.map(userDTO, User.class);
         nuevoUsuario.setRol(rolExistente);
+        nuevoUsuario.setContrasena(passwordEncoder.encode(userDTO.getContrasena()));
 
 
         // guardamos en la bd

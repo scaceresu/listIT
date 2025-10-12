@@ -20,12 +20,12 @@ public class EventController {
     
     // CREATE
     @PostMapping
-    public ResponseEntity<EventResponseDTO> createEvent(@RequestBody EventDTO eventDTO) {
+    public ResponseEntity<?> createEvent(@RequestBody EventDTO eventDTO) {
         try {
             EventResponseDTO createdEvent = eventService.createEvent(eventDTO);
             return new ResponseEntity<>(createdEvent, HttpStatus.CREATED);
         } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: " + e.getMessage());
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }

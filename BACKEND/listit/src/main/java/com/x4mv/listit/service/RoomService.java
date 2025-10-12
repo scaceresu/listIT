@@ -55,6 +55,13 @@ public class RoomService {
         if (roomDTO.getFechaCreacion() == null) {
             roomDTO.setFechaCreacion(LocalDateTime.now());
         }
+
+        //verificamos que no exista una sala con ese nombre 
+        Optional<Room> existingRoom = roomRepository.findByNombre(roomDTO.getNombre());
+
+        if(existingRoom.isPresent()){
+            throw new RuntimeException("El nombre de la sala ya esta en uso");
+        }
         
         // volvemos entidad el dto
         Room room = modelMapper.map(roomDTO, Room.class);

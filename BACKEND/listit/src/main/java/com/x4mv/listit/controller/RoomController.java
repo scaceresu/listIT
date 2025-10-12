@@ -21,11 +21,14 @@ public class RoomController {
     
     // CREATE
     @PostMapping
-    public ResponseEntity<RoomResponseDTO> createRoom(@RequestBody RoomDTO roomDTO) {
+    public ResponseEntity<?> createRoom(@RequestBody RoomDTO roomDTO) {
         try {
             RoomResponseDTO createdRoom = roomService.createRoom(roomDTO);
             return new ResponseEntity<>(createdRoom, HttpStatus.CREATED);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: "+e.getMessage());
+        }
+        catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -88,11 +91,11 @@ public class RoomController {
     
     // DELETE
     @DeleteMapping("/{id}")
-    public ResponseEntity<HttpStatus> deleteRoom(@PathVariable("id") Integer id) {
+    public ResponseEntity<?> deleteRoom(@PathVariable("id") Integer id) {
         try {
             boolean deleted = roomService.deleteRoom(id);
             if (deleted) {
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+                return ResponseEntity.status(HttpStatus.OK).body("La sala ha sido eliminado con exito");
             } else {
                 return new ResponseEntity<>(HttpStatus.NOT_FOUND);
             }
