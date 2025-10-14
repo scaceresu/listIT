@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-ListitApplication<listit>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.x4mv.listit.ListitApplication",
+            "projectName": "listit",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}

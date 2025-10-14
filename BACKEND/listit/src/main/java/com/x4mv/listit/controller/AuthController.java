@@ -13,8 +13,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.x4mv.listit.service.UserService;
 import com.x4mv.listit.dto.UserDTO;
-import com.x4mv.listit.dto.LoginDTO;
-import com.x4mv.listit.dto.LoginResponseDTO;
 
 @RestController
 @RequestMapping("/auth")
@@ -24,24 +22,6 @@ public class AuthController{
 
     @Autowired
     private UserService userService;
-
-    @GetMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginDTO loginDTO){
-
-        try {
-
-            LoginResponseDTO loggedUser = userService.loginUser(loginDTO);
-            return new ResponseEntity<>(loggedUser,HttpStatus.ACCEPTED);
-
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: "+ e.getMessage());
-        }
-        catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: "+e.getMessage());
-        }
-
-        
-    }
 
 
     @PostMapping("/register")
